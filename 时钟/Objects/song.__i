@@ -1,0 +1,1 @@
+"source\song.c" OPTIMIZE (8,SPEED) BROWSE INCDIR(.\inc) DEBUG OBJECTEXTEND PRINT(.\Listings\song.lst) TABS (2) OBJECT(.\Objects\song.obj)

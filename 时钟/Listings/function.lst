@@ -1,0 +1,311 @@
+C51 COMPILER V9.54   FUNCTION                                                              09/01/2023 02:21:03 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE FUNCTION
+OBJECT MODULE PLACED IN .\Objects\function.obj
+COMPILER INVOKED BY: E:\Keil_v5\C51\BIN\C51.EXE source\function.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\inc) DEBUG OBJECTEXT
+                    -END PRINT(.\Listings\function.lst) TABS(2) OBJECT(.\Objects\function.obj)
+
+line level    source
+
+   1          struct_FMRadio FM_NVMread(void)                              //¾ÙÀý£¬È¡NVMÖÐ¶Á³öÊÕÒôÆµÂÊ¡¢ÒôÁ¿ 
+*** ERROR C129 IN LINE 1 OF source\function.c: missing ';' before 'FM_NVMread'
+   2          { struct_FMRadio a={955,5,0xff,0,0xff};
+   3            unsigned int tempuint;
+   4            unsigned char tempuchar;  
+   5            tempuint = ((NVM_Read(0x01)<<8)) + NVM_Read(0x02);             
+   6            if ((tempuint >= 870) & (tempuint <= 1080)) 
+   7              a.frequency=tempuint;
+   8            tempuchar =  NVM_Read(0x03);
+   9            if ( tempuchar < 15 ) a.volume = tempuchar;
+  10            return(a);
+  11          } 
+  12          
+  13          void FM_NVMwrite(struct_FMRadio FM)                          //NVMÖÐ±£´æÊÕÒôÆµÂÊ¡¢ÒôÁ¿
+  14          { NVM_Write(0x01,FM.frequency>>8);                            
+  15            NVM_Write(0x02,FM.frequency);
+  16            NVM_Write(0x03,FM.volume);
+  17          } 
+  18          
+  19          void dealwithIrRxd()             
+  20          { unsigned char a1,a2;
+  21            if(GetIrRxNum()!=0)                                               //Èç¹ûºìÍâ½Ó¿ÚÊÕµ½Êý¾Ý°ü
+  22              { if((*(rxd+0)==0xAA) & (*(rxd+1)==0x55))                         //Èç¹û°üÍ· AA 55
+  23                  { switch(*(rxd+2))
+  24                      { case 0xF1:  a1=*(rxd+3);
+  25                                    a2=*(rxd+4);          
+  26                                    FM.frequency = ((a1/16*10+a1%16)*100) + (a2/16*10+a2%16);      //ÉèÖÃFMÊÕÒô»ú,½«µÚ4¡¢5×
+             -Ö½Úµ÷½ÚFMÊÕÒôÆµÂÊ,BCDÂë»»³É¶þ½øÖÆ
+  27                                    FM.volume = *(rxd+5);                                          //½«  µÚ6×Ö½Ú µ÷½ÚFMÊÕÒôÒôÁ¿
+  28                                    SetFMRadio(FM);                                                //ÉèÖÃÊÕÒô»úÐÂÊÕÒô²ÎÊý
+  29                                    FM_NVMwrite(FM);                                               //±£´æÊÕÒô²ÎÊýµ½NVMÖÐ
+  30                                    break;
+  31                        case 0xF2:  t.hour=(*(rxd+3));                                    //ÉèÖÃRTC //½«µÚ4×Ö½ÚÉè³ÉRTCÊ±£¬B
+             -CDÂë                                        
+  32                                    t.minute=(*(rxd+4));                                            //½«µÚ5×Ö½ÚÉè³ÉRTC·Ö
+  33                                    t.second=(*(rxd+5));                                            //½«µÚ6×Ö½ÚÉè³ÉRTCÃë
+  34                                    RTC_Write(t);                                                   //ÉèÖÃRTC
+  35                                    break;
+  36                        case 0xF3:  t.year=(*(rxd+3));                                    //ÉèÖÃRTC //½«µÚ4×Ö½ÚÉè³ÉRTCÄê£¬B
+             -CDÂë                                       
+  37                                    t.month=(*(rxd+4));                                             //½«µÚ5×Ö½ÚÉè³ÉRTCÔÂ
+  38                                    t.day=(*(rxd+5));                                               //½«µÚ6×Ö½ÚÉè³ÉRTCÈÕ
+  39                                    RTC_Write(t);                                                   //ÉèÖÃRTC
+  40                                    break;
+  41                        default:    break;
+  42                      }
+  43                    (*(rxd+6)) += 4;                                                     //µÚ7×Ö½Ú¼Ó4
+  44                    SetBeep(1000,30);
+  45                  } 
+  46                 else SetBeep(1000,20);
+  47                Uart1Print(&rxd, sizeof(rxd));                                //´Ó´®¿Ú1·¢ËÍ³öÈ¥
+  48              }   
+  49          }
+  50          
+C51 COMPILER V9.54   FUNCTION                                                              09/01/2023 02:21:03 PAGE 2   
+
+  51          void dealwithDisp()                   
+  52          { unsigned char d0,d1,d2,d3,d4,d5,d6,d7;
+  53            int a;
+  54            static unsigned char ct100mS=10;
+  55            
+  56            if(funcmode == Music) return;                  //¸üÐÂÏÔÊ¾£¬£¨Musicº¯Êý×Ô´øÏÔÊ¾¸üÐÂ£¬²»Ðè¸üÐÂ£©
+  57            if (--ct100mS ==0 ) ct100mS=10;
+  58            switch(funcmode)                                                                         
+  59              {  case RTC_YMD:  if(tempadj ==0) t=RTC_Read();         //·Çµ÷Ê±ÖÓÊ±£¬ ¶ÁRTC
+  60                                d0=t.year>>4;
+  61                                d1=t.year&0x0f;
+  62                                d2=12;
+  63                                d3=t.month>>4;
+  64                                d4=t.month&0x0f;
+  65                                d5=12;
+  66                                d6=t.day>>4;
+  67                                d7=t.day&0x0f;
+  68                                break;  
+  69                 case RTC_HMS:  if(tempadj ==0) t=RTC_Read();
+  70                                d0=t.hour>>4;
+  71                                d1=t.hour&0x0f;
+  72                                d2=12;
+  73                                d3=t.minute>>4;
+  74                                d4=t.minute&0x0f;
+  75                                d5=12;
+  76                                d6=t.second>>4;
+  77                                d7=t.second&0x0f;
+  78                                break;
+  79                 case Rt_Rop :  ADCresult=GetADC();
+  80                                d0=ADCresult.Rt/100;
+  81                                d1=ADCresult.Rt/10%10;
+  82                                d2=ADCresult.Rt%10;
+  83                                d3=10;
+  84                                d4=10;
+  85                                d5=ADCresult.Rop/100;
+  86                                d6=ADCresult.Rop/10%10;
+  87                                d7=ADCresult.Rop%10;                        
+  88                                break;                      
+  89                 case FMradio:  d0=FM.volume/10; if(d0==0) d0=10;
+  90                                d1=FM.volume%10;
+  91                                d2=10;
+  92                                d3=10;
+  93                                d4=FM.frequency/1000;   if(d4==0) d4=10;
+  94                                d5=FM.frequency/100%10;
+  95                                d6=FM.frequency/10%10+16;  //¼ÓÐ¡Êýµã
+  96                                d7=FM.frequency%10;
+  97                                break;
+  98                 case UltroSonic: a=GetUltraSonic();           //aÎª²âµÃ¾àÀë£¬ÕýÊý£¬µ¥Î»cm
+  99                                  d0=10;
+ 100                                  d1=10;
+ 101                                  d2=10;
+ 102                                  d3=10;
+ 103                                  d4=a/1000; if(d4 == 0 ) d4=10;      //²»ÏÔÊ¾×î¸ßÎ»0
+ 104                                   a=a%1000;
+ 105                                  d5=a/100+16;                        //ÏÔÊ¾Ð¡Êýµã
+ 106                                   a=a%100;
+ 107                                  d6=a/10;  
+ 108                                  d7=a%10;              
+ 109                                  break;                      
+ 110                 case Weight:   a=GetWeight();                 //aÎª³ÆÖØADÊý¾Ý£¬´ø·ûºÅÕûÊý£¨16bit²¹Âë£©£¬Î´±ê¶¨
+ 111                                d0=10;
+ 112                                d1=10;
+C51 COMPILER V9.54   FUNCTION                                                              09/01/2023 02:21:03 PAGE 3   
+
+ 113                                d2=10;  if (a < 0 ) { a = -a; d2=12; }   //a±äÕýÊý£¬d2·ûºÅ
+ 114                                d3=a/10000; a=a%10000;  
+ 115                                d4=a/1000; a=a%1000; 
+ 116                                d5=a/100; a=a%100;
+ 117                                d6=a/10;
+ 118                                d7=a%10;
+ 119                                break;                    
+ 120                 default:       break;                
+ 121              }
+ 122              
+ 123             if(ct100mS >= 8)
+ 124                switch (tempadj)
+ 125                  { case 1:  d0=10; d1=10; break;
+ 126                    case 2:  d3=10; d4=10; break;
+ 127                    case 3:  d6=10; d7=10; break;
+ 128                    default: break;
+ 129                  }         
+ 130             Seg7Print(d0,d1,d2,d3,d4,d5,d6,d7);
+ 131          }      
+ 132                         
+ 133          void dealwithmyKN()                                           
+ 134          { unsigned char a;
+ 135            switch(funcmode)                                                                         
+ 136              {  case RTC_HMS:  if(GetAdcNavAct(enumAdcNavKeyRight) == enumKeyPress)   { if(tempadj) if(tempadj<3) {te
+             -mpadj++;SetBeep(1000,20);}}   
+ 137                                if(GetAdcNavAct(enumAdcNavKeyLeft)  == enumKeyPress)   { if(tempadj) if(tempadj>1) {tempadj--;;
+             -SetBeep(1000,20);}}    
+ 138                                if(GetAdcNavAct(enumAdcNavKeyUp)== enumKeyPress)       { if(tempadj == 1) { a=t.hour/16*10+t.ho
+             -ur%16;  
+ 139                                                                                                            if((++a) >=24) a =0; 
+ 140                                                                                                            t.hour=a/10*16+a%10;
+ 141                                                                                                            SetBeep(1000,20);
+ 142                                                                                                          }
+ 143                                                                                         if(tempadj == 2) { a=t.minute/16*10+t.minute%16;  
+ 144                                                                                                            if((++a) >=60) a =0; 
+ 145                                                                                                            t.minute=a/10*16+a%10;
+ 146                                                                                                            SetBeep(1000,20);
+ 147                                                                                                          }
+ 148                                                                                         if(tempadj == 3) { a=t.second/16*10+t.second%16;  
+ 149                                                                                                            if((++a) >=60) a =0; 
+ 150                                                                                                            t.second=a/10*16+a%10;
+ 151                                                                                                            SetBeep(1000,20);
+ 152                                                                                                          }
+ 153                                                                                       } 
+ 154                                if(GetAdcNavAct(enumAdcNavKeyDown)== enumKeyPress)     { if(tempadj == 1) { a=t.hour/16*10+t.hou
+             -r%16;  
+ 155                                                                                                            if((a--) == 0) a =23; 
+ 156                                                                                                            t.hour=a/10*16+a%10;
+ 157                                                                                                            SetBeep(1000,20);
+ 158                                                                                                          }
+ 159                                                                                         if(tempadj == 2) { a=t.minute/16*10+t.minute%16;  
+ 160                                                                                                            if((a--) == 0) a =59; 
+ 161                                                                                                            t.minute=a/10*16+a%10;
+ 162                                                                                                            SetBeep(1000,20);
+ 163                                                                                                          }
+ 164                                                                                         if(tempadj == 3) { a=t.second/16*10+t.second%16;  
+ 165                                                                                                            if((a--) == 0) a =59; 
+ 166                                                                                                            t.second=a/10*16+a%10;
+ 167                                                                                                            SetBeep(1000,20);
+ 168                                                                                                          }
+ 169                                                                                       }
+ 170                                if(GetAdcNavAct(enumAdcNavKeyCenter)== enumKeyPress)   {  SetBeep(1000,20);
+C51 COMPILER V9.54   FUNCTION                                                              09/01/2023 02:21:03 PAGE 4   
+
+ 171                                                                                          if(tempadj == 0 ) tempadj=3; 
+ 172                                                                                          else { tempadj=0;
+ 173                                                                                                 RTC_Write(t);
+ 174                                                                                               }
+ 175                                                                                       }  
+ 176                                break;  
+ 177                 case RTC_YMD:  if(GetAdcNavAct(enumAdcNavKeyRight) == enumKeyPress)   { if(tempadj) if(tempadj<3) { te
+             -mpadj++;SetBeep(1000,20);}}   
+ 178                                if(GetAdcNavAct(enumAdcNavKeyLeft)  == enumKeyPress)   { if(tempadj) if(tempadj>1) { tempadj--;
+             -SetBeep(1000,20);}}    
+ 179                                if(GetAdcNavAct(enumAdcNavKeyUp)== enumKeyPress)       { if(tempadj == 1) { a=t.year/16*10+t.ye
+             -ar%16;  
+ 180                                                                                                            if((++a) >=99) a =0; 
+ 181                                                                                                            t.year=a/10*16+a%10;
+ 182                                                                                                            SetBeep(1000,20);
+ 183                                                                                                          }
+ 184                                                                                         if(tempadj == 2) { a=t.month/16*10+t.month%16;  
+ 185                                                                                                            if((++a) >=12) a =1; 
+ 186                                                                                                            t.month=a/10*16+a%10;
+ 187                                                                                                            SetBeep(1000,20);
+ 188                                                                                                          }
+ 189                                                                                         if(tempadj == 3) { a=t.day/16*10+t.day%16;  
+ 190                                                                                                            if((++a) >=31) a =1; 
+ 191                                                                                                            t.day=a/10*16+a%10;
+ 192                                                                                                            SetBeep(1000,20);
+ 193                                                                                                          }
+ 194                                                                                       } 
+ 195                                if(GetAdcNavAct(enumAdcNavKeyDown)== enumKeyPress)     { if(tempadj == 1) { a=t.year/16*10+t.yea
+             -r%16;  
+ 196                                                                                                            if((a--) == 0) a =99; 
+ 197                                                                                                            t.year=a/10*16+a%10;
+ 198                                                                                                            SetBeep(1000,20);
+ 199                                                                                                          }
+ 200                                                                                         if(tempadj == 2) { a=t.month/16*10+t.month%16;  
+ 201                                                                                                            if((a--) == 1) a =12; 
+ 202                                                                                                            t.month=a/10*16+a%10;
+ 203                                                                                                            SetBeep(1000,20);
+ 204                                                                                                          }
+ 205                                                                                         if(tempadj == 3) { a=t.day/16*10+t.day%16;  
+ 206                                                                                                            if((a--) == 1) a =31; 
+ 207                                                                                                            t.day=a/10*16+a%10;
+ 208                                                                                                            SetBeep(1000,20);
+ 209                                                                                                          }
+ 210                                                                                       }
+ 211                                if(GetAdcNavAct(enumAdcNavKeyCenter)== enumKeyPress)   { SetBeep(1000,20);
+ 212                                                                                         if(tempadj == 0 ) tempadj=3; 
+ 213                                                                                          else { tempadj=0;
+ 214                                                                                                 RTC_Write(t);
+ 215                                                                                               }
+ 216                                                                                       }  
+ 217                                break;  
+ 218                 case Music:    if(GetAdcNavAct(enumAdcNavKeyRight) == enumKeyPress)   { if(Music_PM <= 210)  Music_PM +=
+             -10;}       //½Ú´Õ×î¸ßÏÞÃ¿·ÖÖÓ220ÅÄ
+ 219                                if(GetAdcNavAct(enumAdcNavKeyLeft)  == enumKeyPress)   { if(Music_PM >= 60)   Music_PM -=10;}  
+             -     //    ×îµÍÏÞ      50
+ 220                                if(GetAdcNavAct(enumAdcNavKeyUp)== enumKeyPress)       { if(Music_tone < 0xFF) Music_tone++;}  
+             -     //Òôµ÷×î¸ß Fµ÷ £¨ÊýÂë¹ÜÏÔÊ¾£º6£©
+ 221                                if(GetAdcNavAct(enumAdcNavKeyDown)== enumKeyPress)     { if(Music_tone > 0xF9) Music_tone--;}   
+             -    //    ×îµÍ A           ÏÔÊ¾£º0
+ 222                                if(GetAdcNavAct(enumAdcNavKeyCenter)== enumKeyPress)                                           
+             -     //¿ØÖÆÒôÀÖ²¥·Å¡¢ÔÝÍ£      
+ 223                                  if (GetPlayerMode() == enumModePlay) SetPlayerMode(enumModePause);       
+C51 COMPILER V9.54   FUNCTION                                                              09/01/2023 02:21:03 PAGE 5   
+
+ 224                                    else 
+ 225                                      { if (GetPlayerMode() == enumModeStop) SetMusic(Music_PM, Music_tone, &song, sizeof(song), e
+             -numMscDrvSeg7);
+ 226                                        SetPlayerMode(enumModePlay);      
+ 227                                      } 
+ 228                                break;  
+ 229                 case FMradio:  if(GetAdcNavAct(enumAdcNavKeyRight) == enumKeyPress)   {if(FM.frequency<1080) FM.frequen
+             -cy++;}  //ÆµÂÊ+   
+ 230                                if(GetAdcNavAct(enumAdcNavKeyLeft)  == enumKeyPress)   {if(FM.frequency>887) FM.frequency--;}  
+             - //ÆµÂÊ1    
+ 231                                if(GetAdcNavAct(enumAdcNavKeyUp)== enumKeyPress)       {if(FM.volume<15) FM.volume++;}         
+             - //ÒôÁ¿+   
+ 232                                if(GetAdcNavAct(enumAdcNavKeyDown)== enumKeyPress)     {if(FM.volume>0) FM.volume--;}           
+             -//ÒôÁ¿-   
+ 233                                SetFMRadio(FM);                                                                                
+             - //ÉèÖÃÊÕÒô»úÐÂÊÕÒô²ÎÊý  
+ 234                                if(GetAdcNavAct(enumAdcNavKeyCenter)== enumKeyPress)   {FM_NVMwrite(FM); }                      
+             -//±£´æ²ÎÊýµ½NVM
+ 235                                break;
+ 236                 default:       break;                
+ 237              }
+ 238            
+ 239            if(GetAdcNavAct(enumAdcNavKey3) == enumKeyRelease)                                     //Ê¾Àý¡£°´¼ü3:(Ì§Æ
+             -ðÊ±£©Ïò´®¿Ú1·¢ËÍ¶þ½øÖÆÊý¾Ý°ü£º±¨¸æÏµÍ³ÐÔÄÜ  
+ 240              { SysPer=GetSysPerformance();
+ 241                if((GetUart1TxStatus()==enumUart1TxFree))  Uart1Print(&SysPer, sizeof(SysPer));  
+ 242                SetBeep(1000,20);
+ 243              }     
+ 244          }
+ 245          
+ 246          void dealwithmykey()                      
+ 247          {       
+ 248              if (GetKeyAct(enumKey2)== enumKeyPress)                                               //Ê¾Àý¡£°´¼ü2:£¨°´
+             -ÏÂÊ±£©ÇÐ»»ÏÔÊ¾ºÍ°´¼ü¹¦ÄÜÄ£Ê½            
+ 249                { SetBeep(1000,20); 
+ 250                  if(++funcmode > Weight) funcmode= RTC_YMD;  
+ 251                  LedPrint(funcmode); 
+ 252                  M24C02_Write(0x00,funcmode); 
+ 253                  if (funcmode == Music) Seg7Print(10,10,12,12,12,12,10,10);        
+ 254                  if (funcmode == Music+1) SetMusic(enumModeInvalid, enumModeInvalid, enumModeInvalid, enumModeInval
+             -id, enumMscNull);   //Àë¿ªÒôÀÖ²¥·ÅÄ£Ê½£¬¹ØÒôÀÖÏÔÊ¾
+ 255                  if (funcmode == Weight) EXTInit(enumEXTWeight); 
+ 256                  if (funcmode == UltroSonic) EXTInit(enumEXTUltraSonic);         
+ 257                }
+ 258                
+ 259              if (GetKeyAct(enumKey1)== enumKeyPress)                                               //Ê¾Àý¡£°´¼ü1:£¨°´
+             -ÏÂÊ±£©ÏòºìÍâ·¢ËÍÎÄ±¾  
+ 260                { IrPrint("´ó¼ÒºÃ\r\n", sizeof("´ó¼ÒºÃ\r\n"));  
+ 261                  SetBeep(1000,100);        
+ 262                }
+ 263          }
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  1 ERROR(S)

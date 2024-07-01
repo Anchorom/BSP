@@ -1,0 +1,71 @@
+C51 COMPILER V9.54   MAIN                                                                  09/01/2023 02:22:17 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: E:\Keil_v5\C51\BIN\C51.EXE source\main.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\inc) DEBUG OBJECTEXTEND 
+                    -PRINT(.\Listings\main.lst) TABS(2) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          //******* ÓÃ»§³ÌÐò¶Î1£ºÓÃ»§³ÌÐò°üº¬ÎÄ¼þ *************
+   2          #include "STC15F2K60S2.H"        //±ØÐë¡£
+   3          #include "sys.H"                 //±ØÐë¡£
+   4          #include "displayer.H" 
+   5          #include "DS1302.h"
+   6          code unsigned long SysClock=11059200;         //±ØÐë¡£¶¨ÒåÏµÍ³¹¤×÷Ê±ÖÓÆµÂÊ(Hz)£¬ÓÃ»§±ØÐëÐÞ¸Ä³ÉÓëÊµ¼Ê¹¤×÷Æµ
+             -ÂÊ£¨ÏÂÔØÊ±Ñ¡ÔñµÄ£©Ò»ÖÂ
+   7          #ifdef _displayer_H_                          //ÏÔÊ¾Ä£¿éÑ¡ÓÃÊ±±ØÐë¡££¨ÊýÂë¹ÜÏÔÊ¾ÒëÂë±í£¬ÓÃ‘ô¿ÉÐÞ¸Ä¡¢Ôö¼ÓµÈ
+             -£© 
+   8          code char decode_table[]={0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,0x7f,0x6f,0x00,0x08,0x40,0x01, 0x41, 0x4
+             -8, 
+   9                          /* ÐòºÅ:   0   1    2    3    4     5    6    7   8    9   10    11   12   13    14     15    
+             - */
+  10                          /* ÏÔÊ¾:   0   1    2    3    4     5    6    7   8    9  (ÎÞ)   ÏÂ-  ÖÐ-  ÉÏ-  ÉÏÖÐ-  ÖÐÏ
+             -Â-   */  
+  11                                   0x3f|0x80,0x06|0x80,0x5b|0x80,0x4f|0x80,0x66|0x80,0x6d|0x80,0x7d|0x80,0x07|0x80,0x
+             -7f|0x80,0x6f|0x80 };  
+  12                       /* ´øÐ¡Êýµã     0         1         2         3         4         5         6         7      
+             -   8         9        */
+  13          #endif
+  14          unsigned char x[45];
+  15          float a,b,c,d;
+  16          
+  17          struct_DS1302_RTC time={0x30,0,3,22,8,1,0x22}; 
+  18          struct_DS1302_RTC tmp; 
+  19          void my1mS_callback()                      
+  20          {   
+  21   1        tmp=RTC_Read();
+  22   1        Seg7Print(tmp.hour/16,tmp.hour%16,12,tmp.minute/16,tmp.minute%16,12,tmp.second/16,tmp.second%16);
+  23   1      }
+  24          
+  25          
+  26          void main() {         
+  27   1        DisplayerInit();
+  28   1        SetDisplayerArea(0,7);
+  29   1        Seg7Print(10,10,10,10,10,10,10,10);
+  30   1        DS1302Init(time);
+  31   1        RTC_Write(time);
+  32   1        SetEventCallBack(enumEventSys1mS, my1mS_callback);           
+  33   1        MySTC_Init();        
+  34   1        while(1){ 
+  35   2            MySTC_OS();         
+  36   2          }               
+  37   1      }                    
+  38          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    158    ----
+   CONSTANT SIZE    =     30    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     75    ----
+   IDATA SIZE       =   ----    ----
+C51 COMPILER V9.54   MAIN                                                                  09/01/2023 02:22:17 PAGE 2   
+
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

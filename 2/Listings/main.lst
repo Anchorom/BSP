@@ -1,0 +1,73 @@
+C51 COMPILER V9.54   MAIN                                                                  09/01/2023 02:16:29 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: E:\Keil_v5\C51\BIN\C51.EXE source\main.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\inc) DEBUG OBJECTEXTEND 
+                    -PRINT(.\Listings\main.lst) TABS(2) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          #include "STC15F2K60S2.H"        //±ØÐë¡£
+   2          #include "sys.H"                 //±ØÐë¡£
+   3          #include "uart1.h" 
+   4          
+   5          code unsigned long SysClock=11059200;         //±ØÐë¡£¶¨ÒåÏµÍ³¹¤×÷Ê±ÖÓÆµÂÊ(Hz)£¬ÓÃ»§±ØÐëÐÞ¸Ä³ÉÓëÊµ¼Ê¹¤×÷Æµ
+             -ÂÊ£¨ÏÂÔØÊ±Ñ¡ÔñµÄ£©Ò»ÖÂ
+   6          #ifdef _displayer_H_                          //ÏÔÊ¾Ä£¿éÑ¡ÓÃÊ±±ØÐë¡££¨ÊýÂë¹ÜÏÔÊ¾ÒëÂë±í£¬ÓÃ‘ô¿ÉÐÞ¸Ä¡¢Ôö¼ÓµÈ
+             -£© 
+              code char decode_table[]={0x3f,0x06,0x5b,0x4f,0x66,0x6d,0x7d,0x07,0x7f,0x6f,0x00,0x08,0x40,0x01,0x41,0x48,
+             -0x76,0x38,0x40,0x00,  
+                              /* ÐòºÅ:   0    1    2     3    4     5    6    7   8     9     10  11   12   13   14   15    16
+             -   17   18   19  */
+                              /* ÏÔÊ¾:   0    1    2     3    4     5    6    7   8    9  (ÎÞ)   ÏÂ-  ÖÐ-  ÉÏ-  ÉÏÖÐ-  Ö
+             -ÐÏÂ-  H    L    -   £¨ÎÞ£©*/  
+                                       0x3f|0x80,0x06|0x80,0x5b|0x80,0x4f|0x80,0x66|0x80,0x6d|0x80,0x7d|0x80,0x07|0x80,0x
+             -7f|0x80,0x6f|0x80 };  
+                           /* ´øÐ¡Êýµã     20         21         22         23      24        25        26        27    
+             -    28        29        */
+              #endif
+  13          
+  14          char rxd[10];
+  15          char buffer[10];
+  16          char matchhead[2]={0xaa,0x55};
+  17          
+  18          void uart1rxd_callback();
+  19          
+  20          void main() 
+  21          {   
+  22   1        //´®¿Ú³õÊ¼»¯
+  23   1        Uart1Init(2400);
+  24   1        SetUart1Rxd(rxd, 10, matchhead, 2);
+  25   1        SetEventCallBack(enumEventUart1Rxd, uart1rxd_callback);
+  26   1          MySTC_Init();     
+  27   1        while(1)              
+  28   1        {
+  29   2          MySTC_OS();    
+  30   2        }              
+  31   1      }                 
+  32          
+  33          void uart1rxd_callback(){
+  34   1        int i;
+  35   1        for(i=9;i>=0;i--){
+  36   2          buffer[i] = rxd[9-i];
+  37   2        }
+  38   1        Uart1Print(buffer, 10);
+  39   1        return;
+  40   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    102    ----
+   CONSTANT SIZE    =      4    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+C51 COMPILER V9.54   MAIN                                                                  09/01/2023 02:16:29 PAGE 2   
+
+   DATA SIZE        =     22    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

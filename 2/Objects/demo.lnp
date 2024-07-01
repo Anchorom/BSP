@@ -1,0 +1,4 @@
+".\Objects\main.obj",
+".\source\STCBSP_V3.6.LIB" 
+TO ".\Objects\demo" 
+PRINT(".\Listings\demo.m51") RAMSIZE(256) 
